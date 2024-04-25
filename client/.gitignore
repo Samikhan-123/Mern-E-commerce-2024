@@ -10,10 +10,18 @@
 /coverage
 
 # production
+# Ignore .env files
+.env
+
+# Ignore public directory
 /public
+
+# Ignore src directory
 /src
+
+# Ignore package.json and package-lock.json
 package.json
-package.lock.json
+package-lock.json
 
 # misc
 .DS_Store
