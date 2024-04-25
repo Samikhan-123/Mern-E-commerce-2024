@@ -24,9 +24,8 @@ const AdminOrders = () => {
         try {
             setLoading(true);
             const { data } = await axios.get("/api/v1/auth/all-orders");
-            // Reverse the order of data to show latest order first
-            setOrders(data.reverse());
-            console.log(data)
+            setOrders(data?.orders);
+            console.log(data.orders)
         } catch (error) {
             console.log(error);
         } finally {
