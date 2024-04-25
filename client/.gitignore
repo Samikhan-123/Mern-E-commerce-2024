@@ -10,8 +10,8 @@
 /coverage
 
 # production
-public
-src
+/public
+/src
 package.json
 package.lock.json
 
