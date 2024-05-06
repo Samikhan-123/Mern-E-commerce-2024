@@ -135,7 +135,7 @@ export const forgotPasswordController = async (req, res) => {
     if (!user) {
       return res.status(404).send({
         success: false,
-        message: "Wrong Email Or Answer",
+        message: "Wrong Email Or Answer", 
       });
     }
     const hashed = await hashPassword(newPassword);

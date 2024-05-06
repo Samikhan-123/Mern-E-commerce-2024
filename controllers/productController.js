@@ -77,7 +77,45 @@ export const getProductController = async (req, res) => {
   }
 };
 
-// Get single product
+// Route to get a single product by ID
+export const getProductIdController = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).send({
+        success: false,
+        message: "Invalid Product ID",
+      });
+    }
+
+    // Fetch the product from the database
+    const product = await productModel.findById(id);
+
+    if (!product) {
+      return res.status(404).send({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    // If product found, send it in the response
+    res.status(200).send({
+      success: true,
+      message: "Single Product Fetched",
+      product,
+    });
+  } catch (error) {
+    console.error("Error while getting single product:", error);
+    res.status(500).send({
+      success: false,
+      message: "Error while getting single product",
+      error: error.message, 
+    });
+  }
+};
+
+/// get single product using slug
 export const getSingleProductController = async (req, res) => {
   try {
     const product = await productModel
@@ -93,7 +131,7 @@ export const getSingleProductController = async (req, res) => {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Error while getting single product",
+      message: "Eror while getitng single product",
       error,
     });
   }
@@ -157,54 +195,59 @@ export const deleteProductController = async (req, res) => {
   }
 };
 
-// Update product
+//update product
 export const updateProductController = async (req, res) => {
   try {
-    const { name, description, price, category, quantity, shipping } =
-      req.fields;
+    const { name, description, price, category, quantity, shipping } = req.fields;
     const { photo } = req.files;
+
     // Validation
-    switch (true) {
-      case !name:
-        return res.status(500).send({ error: "Name is Required" });
-      case !description:
-        return res.status(500).send({ error: "Description is Required" });
-      case !price:
-        return res.status(500).send({ error: "Price is Required" });
-      case !category:
-        return res.status(500).send({ error: "Category is Required" });
-      case !quantity:
-        return res.status(500).send({ error: "Quantity is Required" });
-      case photo && photo.size >= 6000000:
-        return res
-          .status(500)
-          .send({ error: "Photo is Required and should be less than 6mb" });
+    if (!name || !description || !price || !category || !quantity) {
+      return res.status(400).send({ error: "All fields are required" });
     }
 
-    const products = await productModel.findByIdAndUpdate(
-      req.params.pid,
-      { ...req.fields, slug: slugify(name) },
-      { new: true }
-    );
-    if (photo) {
-      products.photo.data = fs.readFileSync(photo.path);
-      products.photo.contentType = photo.type;
+    // Check photo size
+    if (photo && photo.size >= 6000000) {
+      return res.status(400).send({ error: "Photo should be less than 6mb" });
     }
-    await products.save();
-    res.status(201).send({
+
+    const updatedFields = {
+      name,
+      description,
+      price,
+      category,
+      quantity,
+      shipping,
+      slug: slugify(name), // Assuming slugify is properly defined
+    };
+
+    const product = await productModel.findByIdAndUpdate(req.params.pid, updatedFields, { new: true });
+
+    if (!product) {
+      return res.status(404).send({ error: "Product not found" });
+    }
+
+    if (photo) {
+      product.photo.data = fs.readFileSync(photo.path);
+      product.photo.contentType = photo.type;
+      await product.save();
+    }
+
+    res.status(200).send({
       success: true,
-      message: "Product Updated Successfully",
-      products,
+      message: "Product updated successfully",
+      product,
     });
   } catch (error) {
-    console.log(error);
+    console.error("Error in updateProductController:", error);
     res.status(500).send({
       success: false,
-      error,
-      message: "Error in Update product",
+      error: error.message || "Internal server error",
+      message: "Error in updating product",
     });
-  } 
+  }
 };
+
 // payment gateway
 var gateway = new braintree.BraintreeGateway({
   environment: braintree.Environment.Sandbox,
