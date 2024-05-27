@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  addReviewController,
   brainTreePaymentController,
   braintreeTokenController,
   createProductController,
@@ -10,13 +11,14 @@ import {
   getSingleProductController,
   productPhotoController,
   updateProductController,
+  updateProductQuantities,
 } from "../controllers/productController.js";
 import { isAdmin, requireSignIn } from "../middlewares/authMiddleware.js";
 import formidable from "express-formidable";
 
 const router = express.Router();
 
-//routes
+// create product routes
 router.post(
   "/create-product",
   requireSignIn,
@@ -24,7 +26,7 @@ router.post(
   formidable(),
   createProductController
 );
-//routes
+// update product routes
 router.put(
   "/update-product/:pid",
   requireSignIn,
@@ -32,6 +34,9 @@ router.put(
   formidable(),
   updateProductController
 );
+
+// update product quantities
+router.post("/api/v1/product/update-quantities", updateProductQuantities);
 
 //get products
 router.get("/get-product", getProductController);
@@ -48,7 +53,7 @@ router.get("/category-products/:slug", getCategoryProductsController);
 
 
 //delete product
-router.delete("/delete-product/:pid", deleteProductController);
+router.delete("/delete-product/:pid", requireSignIn, deleteProductController);
 
 //payments routes
 //token
@@ -56,6 +61,10 @@ router.get("/braintree/token", braintreeTokenController);
 
 //payments
 router.post("/braintree/payment", requireSignIn, brainTreePaymentController);
+
+
+//product reviews
+router.put("/rating", requireSignIn, addReviewController);
 
 
 export default router;

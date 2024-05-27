@@ -216,7 +216,7 @@ export const getOrdersController = async (req, res) => {
     });
   }
 };
-//orders
+//  get all orders
 export const getAllOrdersController = async (req, res) => {
   try {
     const orders = await orderModel
@@ -238,6 +238,25 @@ export const getAllOrdersController = async (req, res) => {
     });
   }
 };
+//update order
+export const updateOrderController = async (req, res) => {
+  const { id } = req.params;
+  const { products, bill } = req.body;
+
+  try {
+    const updatedOrder = await orderModel.findByIdAndUpdate(
+      id,
+      { products, bill },
+      { new: true }
+    );
+
+    res.json(updatedOrder);
+  } catch (error) {
+    console.error("Error updating order:", error);
+    res.status(500).json({ error: "Failed to update order" });
+  }
+};
+
 
 //order status
 export const orderStatusController = async (req, res) => {
@@ -259,6 +278,8 @@ export const orderStatusController = async (req, res) => {
     });
   }
 };
+
+// get all users details
 export const GetAllUsersDetails = async (req, res) => {
   try {
     // Fetch all users from the userModel
@@ -271,5 +292,46 @@ export const GetAllUsersDetails = async (req, res) => {
       message: "Error while fetching all user details",
       error,
     });
+  }
+};
+
+
+//   update user role
+export  const updateUserRoleController = async (req, res) => {
+  const { userId } = req.params;
+  const { role } = req.body;
+
+  try {
+    // Find the user by ID and update the role
+    const user = await userModel.findByIdAndUpdate(userId, { role }, { new: true });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'User role updated successfully', user });
+  } catch (error) {
+    console.error('Error updating user role:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+// delete user controller
+export const DeleteUserController = async (req, res) => {
+  const userId = req.params.userId; // Extract userId from request parameters
+
+  try {
+    // Find the user by ID and delete it
+    const deletedUser = await userModel.findByIdAndDelete(userId);
+
+    if (!deletedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ message: 'Error deleting user' });
   }
 };

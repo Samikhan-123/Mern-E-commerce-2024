@@ -14,8 +14,12 @@
   "author": "samikhan",
   "license": "MIT",
   "dependencies": {
+    "@babel/cli": "^7.24.5",
+    "@babel/core": "^7.24.5",
+    "@babel/node": "^7.23.9",
     "bcrypt": "^5.1.0",
     "braintree": "^3.23.0",
+    "chart.js": "^4.4.2",
     "colors": "^1.4.0",
     "concurrently": "^7.6.0",
     "cors": "^2.8.5",

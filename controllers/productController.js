@@ -5,6 +5,7 @@ import categoryModel from "../models/categoryModel.js";
 import braintree from "braintree";
 import dotenv from 'dotenv';
 import orderModel from "../models/orderModel.js";
+// import userModel from "../models/userModel.js";
 dotenv.config()
 
 
@@ -59,7 +60,7 @@ export const getProductController = async (req, res) => {
       .find({})
       .populate("category")
       .select("-photo")
-      .limit(12)
+      // .limit(12)
       .sort({ createdAt: -1 });
     res.status(200).send({
       success: true,
@@ -110,7 +111,7 @@ export const getProductIdController = async (req, res) => {
     res.status(500).send({
       success: false,
       message: "Error while getting single product",
-      error: error.message, 
+      error: error.message,
     });
   }
 };
@@ -248,6 +249,25 @@ export const updateProductController = async (req, res) => {
   }
 };
 
+// Update product quantities
+export const updateProductQuantities = (async (req, res) => {
+  const { products } = req.body;
+
+  try {
+    const promises = products.map(async (product) => {
+      const updatedProduct = await productModel.findByIdAndUpdate(product._id, { quantity: product.quantity });
+      return updatedProduct;
+    });
+
+    await Promise.all(promises);
+
+    res.status(200).send({ success: true, message: "Product quantities updated successfully" });
+  } catch (error) {
+    console.error("Error updating product quantities:", error);
+    res.status(500).send({ success: false, error: "Error updating product quantities" });
+  }
+});
+
 // payment gateway
 var gateway = new braintree.BraintreeGateway({
   environment: braintree.Environment.Sandbox,
@@ -286,6 +306,7 @@ export const brainTreePaymentController = async (req, res) => {
     const userAgent = req.headers['user-agent'] || '';
     const deviceType = userAgent.toLowerCase().includes('mobile') ? 'Mobile' : 'Desktop';
     console.log('Device Type:', deviceType);
+    console.log('User Agent:', userAgent);
 
     // Make the payment using Braintree gateway
     gateway.transaction.sale(
@@ -302,7 +323,7 @@ export const brainTreePaymentController = async (req, res) => {
           res.status(500).json({
             success: false,
             message: "Payment failed",
-            error: error.message, 
+            error: error.message,
           });
         } else {
           try {
@@ -310,20 +331,22 @@ export const brainTreePaymentController = async (req, res) => {
             const order = new orderModel({
               products: cart,
               payment: {
-                amount: total, 
-                currency: 'PKR', 
-                paymentMethodNonce: nonce, 
-                success: true, 
+                amount: total,
+                currency: 'PKR',
+                paymentMethodNonce: nonce,
+                success: true,
               },
               buyer: req.user._id,
-              deviceType: deviceType, 
+              deviceType: deviceType,
+              userAgent: userAgent,
+
             });
-            await order.save(); // Await the save operation
+            await order.save();
 
             res.status(200).json({
               success: true,
               message: "Payment completed successfully",
-              order: order, // Include the order details in the response
+              order: order,
             });
           } catch (saveError) {
             console.log(saveError);
@@ -337,3 +360,67 @@ export const brainTreePaymentController = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
+
+export const addReviewController = async (req, res) => {
+ const { rating, comment, productId } = req.body;
+const userId = req.user._id; // Assuming you have user auth middleware
+const images = req.files ? req.files.map((file) => file.path) : [];
+
+try {
+  const product = await productModel.findById(productId);
+
+  if (!product) {
+    return res.status(404).json({ error: 'Product not found' });
+  }
+
+  const review = {
+    rating: Number(rating),
+    comment,
+    images,
+    postedBy: userId,
+  };
+
+  product.reviews.push(review);
+  await product.save();
+
+  res.json({ success: true, message: 'Review added successfully' });
+} catch (error) {
+  console.error('Error adding review:', error);
+  res.status(500).json({ error: 'Failed to add review' });
+}
+ };
+
+// const getReviewsController = async (req, res) => {
+//   const { productId } = req.query;
+
+//   try {
+//     const product = await productModel.findById(productId).populate('reviews.postedBy');
+
+//     if (!product) {
+//       return res.status(404).json({ error: 'Product not found' });
+//     }
+
+//     res.json({ success: true, reviews: product.reviews });
+//   } catch (error) {
+//     console.error('Error getting reviews:', error);
+//     res.status(500).json({ error: 'Failed to get reviews' });
+//   }
+// };  
+
+
+// export const getReviewsController = async (req, res) => {
+//   const { productId } = req.query;
+
+//   try {
+//     const product = await productModel.findById(productId).populate('reviews.postedBy');
+
+//     if (!product) {
+//       return res.status(404).json({ error: 'Product not found' });
+//     }
+
+//     res.json({ success: true, reviews: product.reviews });
+//   } catch (error) {
+//     console.error('Error getting reviews:', error);
+//     res.status(500).json({ error: 'Failed to get reviews' });
+//   }
+// };

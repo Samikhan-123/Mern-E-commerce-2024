@@ -9,6 +9,9 @@ import {
   getAllOrdersController,
   orderStatusController,
   GetAllUsersDetails,
+  updateUserRoleController,
+  DeleteUserController,
+  updateOrderController,
 } from "../controllers/authController.js";
 import { isAdmin, requireSignIn } from "../middlewares/authMiddleware.js";
 
@@ -32,9 +35,20 @@ router.get("/test", requireSignIn, isAdmin, testController);
 router.get("/user-auth", requireSignIn, (req, res) => {
   res.status(200).send({ ok: true });
 });
+
+
+// get all users 
 router.get("/users", requireSignIn, GetAllUsersDetails, (req, res) => {
   res.status(200).send({ ok: true });
+  
 });
+
+// delete user using userId
+router.delete("/delete-user/:userId", requireSignIn, isAdmin,DeleteUserController, (req, res) => {
+  res.status(200).send({ ok: true });
+
+});
+
 //protected Admin route auth
 router.get("/admin-auth", requireSignIn, isAdmin, (req, res) => {
   res.status(200).send({ ok: true });
@@ -44,10 +58,18 @@ router.get("/admin-auth", requireSignIn, isAdmin, (req, res) => {
 router.put("/profile", requireSignIn, updateProfileController);
 
 //orders
-router.get("/orders", requireSignIn, getOrdersController);
+router.get("/orders", requireSignIn, getOrdersController); 
 
 //all orders
 router.get("/all-orders", requireSignIn, isAdmin, getAllOrdersController);
+
+//update order 
+router.route("/update-order/:id", requireSignIn, updateOrderController);
+
+
+//update role
+router.put("/update-role/:userId", requireSignIn, isAdmin, updateUserRoleController);
+
 
 // order status update
 router.put(
